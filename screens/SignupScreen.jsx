@@ -10,12 +10,14 @@ import {
 } from 'react-native';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../firebase/firebaseconfig';
+import { Feather } from '@expo/vector-icons';
 
 const SignupScreen = ({ navigation }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSignup = async () => {
     if (name === '' || email === '' || password === '') {
@@ -27,7 +29,6 @@ const SignupScreen = ({ navigation }) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, { displayName: name });
-      // Auth state listener in App.js will handle the redirection
     } catch (error) {
       Alert.alert('Signup Error', error.message);
     } finally {
@@ -38,9 +39,9 @@ const SignupScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Image 
-          source={{ uri: 'https://via.placeholder.com/100' }} 
-          style={styles.logo} 
+        <Image
+          source={require('../assets/Logo.png')}
+          style={styles.logo}
         />
         <Text style={styles.title}>ScholarMind</Text>
       </View>
@@ -64,13 +65,22 @@ const SignupScreen = ({ navigation }) => {
           autoCapitalize="none"
         />
         
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.passwordInput}
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+            <Feather
+              name={showPassword ? 'eye' : 'eye-off'}
+              size={20}
+              color="#888"
+            />
+          </TouchableOpacity>
+        </View>
         
         <TouchableOpacity 
           style={styles.signupButton} 
@@ -129,6 +139,18 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     paddingVertical: 10,
     marginBottom: 20,
+    fontSize: 16,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderColor: '#ddd',
+    marginBottom: 20,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 10,
     fontSize: 16,
   },
   signupButton: {

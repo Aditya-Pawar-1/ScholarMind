@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from 'react-native-vector-icons';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 const PasscodeScreen = ({ navigation }) => {
   const [passcode, setPasscode] = useState('');
@@ -30,11 +31,32 @@ const PasscodeScreen = ({ navigation }) => {
     getPasscode();
   }, []);
 
+  const handleBiometricAuth = async () => {
+    const compatible = await LocalAuthentication.hasHardwareAsync();
+    const enrolled = await LocalAuthentication.isEnrolledAsync();
+
+    if (!compatible || !enrolled) {
+      Alert.alert('Error', 'Biometric authentication not available or not set up on this device.');
+      return;
+    }
+
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: 'Authenticate with fingerprint',
+      fallbackLabel: 'Use Passcode',
+    });
+
+    if (result.success) {
+      navigation.navigate('MainApp');
+    } else {
+      Alert.alert('Authentication Failed', 'Could not authenticate using biometrics.');
+    }
+  };
+
   const handleNumberPress = (number) => {
     if (passcode.length < 4) {
       const newPasscode = passcode + number;
       setPasscode(newPasscode);
-      
+
       // Check if complete passcode entered
       if (newPasscode.length === 4) {
         verifyPasscode(newPasscode);
@@ -58,16 +80,16 @@ const PasscodeScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Image 
-          source={{ uri: 'https://via.placeholder.com/100' }} 
-          style={styles.logo} 
+        <Image
+          source={require('../assets/Logo.png')}
+          style={styles.logo}
         />
         <Text style={styles.title}>ScholarMind</Text>
       </View>
 
       <View style={styles.passcodeContainer}>
         <Text style={styles.passcodeTitle}>Passcode</Text>
-        
+
         <View style={styles.dotsContainer}>
           {[...Array(4)].map((_, index) => (
             <View
@@ -101,7 +123,7 @@ const PasscodeScreen = ({ navigation }) => {
               <Text style={styles.keypadButtonText}>3</Text>
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.keypadRow}>
             <TouchableOpacity
               style={styles.keypadButton}
@@ -122,7 +144,7 @@ const PasscodeScreen = ({ navigation }) => {
               <Text style={styles.keypadButtonText}>6</Text>
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.keypadRow}>
             <TouchableOpacity
               style={styles.keypadButton}
@@ -143,11 +165,15 @@ const PasscodeScreen = ({ navigation }) => {
               <Text style={styles.keypadButtonText}>9</Text>
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.keypadRow}>
-            <TouchableOpacity style={styles.keypadButton}>
-              <Ionicons name="finger-print-outline" size={30} color="#4a90e2" />
+            <TouchableOpacity
+              style={styles.keypadButton}
+              onPress={handleBiometricAuth}
+            >
+              <Ionicons name="finger-print-outline" size={30} color="#fff" />
             </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.keypadButton}
               onPress={() => handleNumberPress('0')}
@@ -184,6 +210,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     marginRight: 10,
+    resizeMode: 'contain'
   },
   title: {
     color: 'white',

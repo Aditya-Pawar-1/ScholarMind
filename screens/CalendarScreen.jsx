@@ -6,19 +6,25 @@ import {
     TouchableOpacity,
     StyleSheet,
 } from 'react-native';
-// import { useNavigation } from '@react-navigation/native';
 import { useData } from '../context/DataContext';
-// import { MaterialIcons } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
 import Checkbox from 'expo-checkbox';
+import UserHeader from "../components/UserHeader";
+import { auth } from '../firebase/firebaseconfig';
+
 
 const CalendarScreen = () => {
     const { toggleGoalCompletion, getGoalsByDate } = useData();
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [goals, setGoals] = useState([]);
+    const [user, setUser] = useState(null);
 
     useEffect(() => {
-        const dateStr = selectedDate.toISOString().split('T')[0]; // "yyyy-mm-dd"
+        if (auth.currentUser) {
+            setUser(auth.currentUser);
+        }
+
+        const dateStr = selectedDate.toISOString().split('T')[0];
         setGoals(getGoalsByDate(dateStr));
     }, [selectedDate, getGoalsByDate]);
 
@@ -43,9 +49,6 @@ const CalendarScreen = () => {
                     <Text style={styles.goalSubject}>Subject: {item.subject}</Text>
                 </View>
             </View>
-            {/* <TouchableOpacity onPress={() => navigation.navigate('GoalDetails', { goal: item })}>
-                <MaterialIcons name="info-outline" size={22} color="#4096FF" />
-            </TouchableOpacity> */}
         </View>
     );
 
@@ -60,6 +63,10 @@ const CalendarScreen = () => {
 
     return (
         <View style={styles.container}>
+            <UserHeader
+                username={user?.displayName}
+                onTimerPress={() => navigation.navigate("Timer")}
+            />
             <Text style={styles.header}>Calendar</Text>
 
             <Calendar
@@ -103,13 +110,13 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
-        paddingTop: 40,
     },
     header: {
         fontSize: 24,
         fontWeight: 'bold',
         textAlign: 'center',
         marginBottom: 16,
+        paddingTop: 8
     },
     calendar: {
         marginHorizontal: 16,

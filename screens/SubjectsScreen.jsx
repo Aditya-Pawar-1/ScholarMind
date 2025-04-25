@@ -10,6 +10,8 @@ import {
   Alert,
 } from "react-native";
 import { useData } from "../context/DataContext";
+import EvilIcons from 'react-native-vector-icons/EvilIcons';
+
 
 const SubjectsSetup = ({ navigation }) => {
   const [subject, setSubject] = useState("");
@@ -45,7 +47,7 @@ const SubjectsSetup = ({ navigation }) => {
       <Text style={styles.subjectNumber}>{index + 1}.</Text>
       <Text style={styles.subjectName}>{item.name}</Text>
       <TouchableOpacity onPress={() => handleRemoveSubject(item.id)}>
-        <Text style={styles.deleteIcon}>🗑️</Text>
+        <EvilIcons name="trash" size={30} color="#4990E2" />
       </TouchableOpacity>
     </View>
   );
@@ -54,11 +56,8 @@ const SubjectsSetup = ({ navigation }) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Image
-          source={{
-            uri: "https://eeaa294a-9ee4-4387-9297-e47587d9b7ba.lovableproject.com/lovable-uploads/c7619878-13c4-44c3-9e5c-23d84169a8dc.png",
-          }}
+          source={require('../assets/Logo.png')}
           style={styles.logo}
-          resizeMode="contain"
         />
         <Text style={styles.headerText}>ScholarMind</Text>
       </View>
@@ -106,16 +105,23 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#4990E2",
-    padding: 20,
+    backgroundColor: '#4a90e2',
     paddingTop: 50,
+    paddingBottom: 20,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   logo: {
     width: 40,
     height: 40,
     marginRight: 10,
+    resizeMode: 'contain',
+  },
+  title: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   headerText: {
     color: "white",
@@ -174,10 +180,6 @@ const styles = StyleSheet.create({
   subjectName: {
     flex: 1,
     fontSize: 16,
-  },
-  deleteIcon: {
-    fontSize: 18,
-    color: "#4990E2",
   },
   continueButton: {
     backgroundColor: "#4990E2",

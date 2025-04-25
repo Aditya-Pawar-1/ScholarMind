@@ -10,18 +10,41 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from 'react-native-vector-icons';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 const SetPasscodeScreen = ({ navigation }) => {
   const [passcode, setPasscode] = useState('');
   const [confirmPasscode, setConfirmPasscode] = useState('');
   const [isConfirming, setIsConfirming] = useState(false);
 
+  const handleBiometricAuth = async () => {
+    const compatible = await LocalAuthentication.hasHardwareAsync();
+    const enrolled = await LocalAuthentication.isEnrolledAsync();
+
+    if (!compatible || !enrolled) {
+      Alert.alert('Error', 'Biometric authentication not available or not set up on this device.');
+      return;
+    }
+
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: 'Authenticate with fingerprint',
+      fallbackLabel: 'Use Passcode',
+    });
+
+    if (result.success) {
+      // Allow login (pretend "biometric" is a valid passcode in AuthContext)
+      navigation.navigate('Subjects'); // or use AuthContext verifyPasscode('biometric')
+    } else {
+      Alert.alert('Authentication Failed', 'Could not authenticate using biometrics.');
+    }
+  };
+
   const handleNumberPress = (number) => {
     if (!isConfirming) {
       if (passcode.length < 4) {
         const newPasscode = passcode + number;
         setPasscode(newPasscode);
-        
+
         if (newPasscode.length === 4) {
           setIsConfirming(true);
         }
@@ -30,7 +53,7 @@ const SetPasscodeScreen = ({ navigation }) => {
       if (confirmPasscode.length < 4) {
         const newConfirmPasscode = confirmPasscode + number;
         setConfirmPasscode(newConfirmPasscode);
-        
+
         if (newConfirmPasscode.length === 4) {
           verifyPasscodes(passcode, newConfirmPasscode);
         }
@@ -71,9 +94,9 @@ const SetPasscodeScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Image 
-          source={{ uri: 'https://via.placeholder.com/100' }} 
-          style={styles.logo} 
+        <Image
+          source={require('../assets/Logo.png')}
+          style={styles.logo}
         />
         <Text style={styles.title}>ScholarMind</Text>
       </View>
@@ -82,7 +105,7 @@ const SetPasscodeScreen = ({ navigation }) => {
         <Text style={styles.passcodeTitle}>
           {isConfirming ? 'Confirm Passcode' : 'Set Passcode'}
         </Text>
-        
+
         <View style={styles.dotsContainer}>
           {[...Array(4)].map((_, index) => (
             <View
@@ -118,7 +141,7 @@ const SetPasscodeScreen = ({ navigation }) => {
               <Text style={styles.keypadButtonText}>3</Text>
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.keypadRow}>
             <TouchableOpacity
               style={styles.keypadButton}
@@ -139,7 +162,7 @@ const SetPasscodeScreen = ({ navigation }) => {
               <Text style={styles.keypadButtonText}>6</Text>
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.keypadRow}>
             <TouchableOpacity
               style={styles.keypadButton}
@@ -160,11 +183,15 @@ const SetPasscodeScreen = ({ navigation }) => {
               <Text style={styles.keypadButtonText}>9</Text>
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.keypadRow}>
-            <TouchableOpacity style={styles.keypadButton}>
-              <Ionicons name="finger-print-outline" size={30} color="#4a90e2" />
+            <TouchableOpacity
+              style={styles.keypadButton}
+              onPress={handleBiometricAuth}
+            >
+              <Ionicons name="finger-print-outline" size={30} color="#fff" />
             </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.keypadButton}
               onPress={() => handleNumberPress('0')}
@@ -175,7 +202,7 @@ const SetPasscodeScreen = ({ navigation }) => {
               style={styles.keypadButton}
               onPress={handleDeletePress}
             >
-              <Ionicons name="backspace-outline" size={30} color="#4a90e2" />
+              <Ionicons name="backspace-outline" size={30} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
@@ -201,6 +228,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     marginRight: 10,
+    resizeMode: 'contain'
   },
   title: {
     color: 'white',
@@ -248,6 +276,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#4a90e2',
     justifyContent: 'center',
     alignItems: 'center',
+    color: 'white'
   },
   keypadButtonText: {
     fontSize: 24,

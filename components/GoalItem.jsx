@@ -13,25 +13,25 @@ const GoalItem = ({ goal, onToggleComplete, onDelete, onEdit }) => {
         )}
       </TouchableOpacity>
 
-      <View style={styles.goalContent}>
-        <Text style={[styles.goalTitle, goal.completed && styles.goalCompleted]}>
-          {goal.title}
-        </Text>
-        <Text style={styles.goalSubject}>Subject: {goal.subject}</Text>
-        {goal.description ? (
-          <Text style={styles.goalDescription}>Description: {goal.description}</Text>
-        ) : null}
-      </View>
+      <View>
+        <View style={styles.goalContent}>
+          <Text style={[styles.goalTitle, goal.completed && styles.goalCompleted]}>
+            {goal.title}
+          </Text>
+          <Text style={styles.goalSubject}>Subject: {goal.subject}</Text>
+          {goal.description ? (
+            <Text style={styles.goalDescription}>Description: {goal.description}</Text>
+          ) : null}
+        </View>
 
-      <View style={styles.goalActions}>
-        {/* <TouchableOpacity style={styles.goalActionButton}>
-          <Text style={styles.actionButtonText}
-            onPress={() => onEdit(goal.id)}
-          > Edit</Text>
-        </TouchableOpacity> */}
-        <TouchableOpacity style={[styles.goalActionButton, styles.deleteButton]} onPress={() => onDelete(goal.id)}>
-          <Text style={styles.actionButtonText}>Delete</Text>
-        </TouchableOpacity>
+        <View style={styles.goalActions}>
+          <TouchableOpacity style={styles.goalActionButton} onPress={() => onEdit(goal)}>
+            <Text style={styles.actionButtonText}>Edit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.goalActionButton, styles.deleteButton]} onPress={() => onDelete(goal.id)}>
+            <Text style={styles.actionButtonText}>Delete</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View >
   );
@@ -44,12 +44,15 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 15,
     elevation: 2,
+    flexDirection: "row",
+    gap: 8,
   },
   checkbox: {
     marginBottom: 10,
   },
   goalContent: {
     flex: 1,
+    flexDirection: "column",
   },
   goalTitle: {
     fontSize: 16,
@@ -70,11 +73,12 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   goalActions: {
+    width: '100%',
     flexDirection: 'row',
     marginTop: 10,
   },
   goalActionButton: {
-    width: '30%',
+    width: '35%',
     backgroundColor: '#4a90e2',
     paddingVertical: 5,
     paddingHorizontal: 15,
@@ -88,6 +92,7 @@ const styles = StyleSheet.create({
   actionButtonText: {
     width: '100%',
     color: '#fff',
+    textAlign: 'center',
   },
 });
 

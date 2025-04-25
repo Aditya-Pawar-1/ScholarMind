@@ -6,41 +6,37 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
+  Modal,
 } from "react-native";
 import { Ionicons } from "react-native-vector-icons";
 import { useData } from "../context/DataContext";
 import GoalItem from "../components/GoalItem";
 import UserHeader from "../components/UserHeader";
-import { auth } from '../firebase/firebaseconfig';
+import { auth } from "../firebase/firebaseconfig";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const HomeScreen = ({ navigation }) => {
   const [user, setUser] = useState(null);
-  const { goals, subjects, addGoal, toggleGoalCompletion, deleteGoal, updateGoal, setSubjects } = useData();
+  const { goals, subjects, addGoal, toggleGoalCompletion, deleteGoal, updateGoal, setGoals, setSubjects } = useData();
   const [newGoal, setNewGoal] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
   const [description, setDescription] = useState("");
   const [showAddGoal, setShowAddGoal] = useState(false);
   const [showSubjectDropdown, setShowSubjectDropdown] = useState(false);
 
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingGoal, setEditingGoal] = useState(null);
+
   useEffect(() => {
     const loadUserData = async () => {
-      // Get user info
-      if (auth.currentUser) {
-        setUser(auth.currentUser);
-      }
+      if (auth.currentUser) setUser(auth.currentUser);
 
-      // Load goals from AsyncStorage
       try {
         const savedGoals = await AsyncStorage.getItem("goals");
-        if (savedGoals) {
-          setGoals(JSON.parse(savedGoals));
-        }
+        if (savedGoals) setGoals(JSON.parse(savedGoals));
 
         const savedSubjects = await AsyncStorage.getItem("subjects");
-        if (savedSubjects) {
-          setSubjects(JSON.parse(savedSubjects));
-        }
+        if (savedSubjects) setSubjects(JSON.parse(savedSubjects));
       } catch (error) {
         console.error("Error loading data:", error);
       }
@@ -48,6 +44,7 @@ const HomeScreen = ({ navigation }) => {
 
     loadUserData();
   }, []);
+
   const handleAddGoal = () => {
     if (!newGoal.trim() || !selectedSubject) return;
 
@@ -65,6 +62,25 @@ const HomeScreen = ({ navigation }) => {
     setShowAddGoal(false);
     setShowSubjectDropdown(false);
   };
+
+  const handleEditPress = (goal) => {
+    setEditingGoal(goal);
+    setEditModalVisible(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingGoal.title.trim() || !editingGoal.subject) return;
+
+    updateGoal(editingGoal.id, {
+      title: editingGoal.title,
+      subject: editingGoal.subject,
+      description: editingGoal.description,
+    });
+
+    setEditModalVisible(false);
+    setEditingGoal(null);
+  };
+
   const handleCloseGoal = () => {
     setNewGoal("");
     setSelectedSubject("");
@@ -81,7 +97,7 @@ const HomeScreen = ({ navigation }) => {
         <Text style={styles.formLabel}>Goal</Text>
         <TextInput
           style={styles.input}
-          placeholder="write your goal"
+          placeholder="Write your goal"
           value={newGoal}
           onChangeText={setNewGoal}
         />
@@ -114,7 +130,6 @@ const HomeScreen = ({ navigation }) => {
           </View>
         )}
 
-
         <Text style={styles.formLabel}>Add Description</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
@@ -127,6 +142,79 @@ const HomeScreen = ({ navigation }) => {
       </View>
     );
   };
+
+  const renderEditModal = () => (
+    <Modal visible={editModalVisible} animationType="slide" transparent>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          <Text style={styles.modalTitle}>Edit Goal</Text>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Title"
+            value={editingGoal?.title}
+            onChangeText={(text) =>
+              setEditingGoal((prev) => ({ ...prev, title: text }))
+            }
+          />
+
+          <Text style={styles.formLabel}>Select Subject</Text>
+          <TouchableOpacity
+            style={styles.selectContainer}
+            onPress={() => setShowSubjectDropdown(!showSubjectDropdown)}
+          >
+            <Text style={styles.selectText}>
+              {editingGoal?.subject || "Tap to select a subject"}
+            </Text>
+            <Ionicons name="chevron-down" size={20} />
+          </TouchableOpacity>
+
+          {showSubjectDropdown && (
+            <View style={styles.dropdown}>
+              {subjects.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.subjectItem}
+                  onPress={() => {
+                    setEditingGoal((prev) => ({
+                      ...prev,
+                      subject: item.name,
+                    }));
+                    setShowSubjectDropdown(false);
+                  }}
+                >
+                  <Text style={styles.subjectItemList}>{item.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            placeholder="Description"
+            value={editingGoal?.description}
+            onChangeText={(text) =>
+              setEditingGoal((prev) => ({ ...prev, description: text }))
+            }
+            multiline
+            numberOfLines={4}
+          />
+
+          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+            <TouchableOpacity style={styles.saveBtn} onPress={handleSaveEdit}>
+              <Text style={styles.saveText}>Save</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.saveBtn, { backgroundColor: "#ccc" }]}
+              onPress={() => setEditModalVisible(false)}
+            >
+              <Text style={styles.saveText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
 
   return (
     <View style={styles.container}>
@@ -153,7 +241,7 @@ const HomeScreen = ({ navigation }) => {
                   goal={goal}
                   onToggleComplete={toggleGoalCompletion}
                   onDelete={deleteGoal}
-                  onEdit={updateGoal}
+                  onEdit={() => handleEditPress(goal)}
                 />
               ))
             )}
@@ -174,31 +262,32 @@ const HomeScreen = ({ navigation }) => {
           color="#fff"
         />
       </TouchableOpacity>
-      {showAddGoal && <TouchableOpacity
-        style={styles.fabCross}
-        onPress={() => {
-          if (showAddGoal) handleCloseGoal();
-          else setShowAddGoal(true);
-        }}
-      >
-        <Ionicons
-          name={"close"}
-          size={30}
-          color="#fff"
-        />
-      </TouchableOpacity>
-      }
-    </View >
+
+      {showAddGoal && (
+        <TouchableOpacity
+          style={styles.fabCross}
+          onPress={() => {
+            if (showAddGoal) handleCloseGoal();
+            else setShowAddGoal(true);
+          }}
+        >
+          <Ionicons name="close" size={30} color="#fff" />
+        </TouchableOpacity>
+      )}
+
+      {renderEditModal()}
+    </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
+    width: "100%",
     flex: 1,
     backgroundColor: "#f5f5f5",
   },
   header: {
-    width: '100%',
+    width: "100%",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -256,52 +345,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
-  },
-  checkbox: {
-    marginBottom: 10,
-  },
-  goalContent: {
-    flex: 1,
-  },
-  goalTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 5,
-  },
-  goalCompleted: {
-    textDecorationLine: "line-through",
-    color: "#999",
-  },
-  goalSubject: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 5,
-  },
-  goalDescription: {
-    fontSize: 14,
-    color: "#666",
-  },
-  goalActions: {
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    marginTop: 10,
-  },
-  goalActionButton: {
-    backgroundColor: "#4a90e2",
-    paddingVertical: 5,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-    marginRight: 10,
-  },
-  deleteButton: {
-    backgroundColor: "#e25c5c",
-  },
-  actionButtonText: {
-    color: "#fff",
-    fontSize: 14,
-  },
-  infoButton: {
-    marginLeft: 5,
   },
   noGoalsText: {
     textAlign: "center",
@@ -366,7 +409,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   selectText: {
-    width: '70%',
+    width: "70%",
     color: "#666",
   },
   dropdown: {
@@ -391,6 +434,36 @@ const styles = StyleSheet.create({
   subjectItemList: {
     fontSize: 16,
     color: "#333",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    padding: 20,
+    width: "90%",
+    borderRadius: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 15,
+  },
+  saveBtn: {
+    backgroundColor: "#4a90e2",
+    padding: 10,
+    borderRadius: 5,
+    flex: 1,
+    alignItems: "center",
+    marginTop: 15,
+    marginHorizontal: 5,
+  },
+  saveText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
 

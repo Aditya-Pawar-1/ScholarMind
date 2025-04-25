@@ -42,9 +42,12 @@ const TrackerScreen = ({ navigation }) => {
                 {subjects.length === 0 ? (
                     <Text style={styles.noSubjects}>
                         You have no subjects.{" "}
-                        <Text style={styles.link} onPress={() => navigation.navigate("Subjects")}>
-                            Add a subject
-                        </Text>
+                        <TouchableOpacity
+                            style={styles.addButton}
+                            onPress={() => navigation.navigate("Subjects")}
+                        >
+                            <Text style={styles.addButtonText}>Add a subject</Text>
+                        </TouchableOpacity>
                     </Text>
                 ) : (
                     <>
@@ -59,6 +62,18 @@ const TrackerScreen = ({ navigation }) => {
                                     <Picker.Item key={subject.id} label={subject.name} value={subject.name} />
                                 ))}
                             </Picker>
+                        </View>
+
+                        <View>
+                            <Text style={styles.noSubjects}>
+                                Want to add new subjects? {" "}
+                            </Text>
+                            <TouchableOpacity
+                                style={styles.addButton}
+                                onPress={() => navigation.navigate("Subjects")}
+                            >
+                                <Text style={styles.addButtonText}>Add a subject</Text>
+                            </TouchableOpacity>
                         </View>
 
                         <Text style={styles.subtitle}>Subject: {selectedSubject}</Text>
@@ -78,9 +93,9 @@ const TrackerScreen = ({ navigation }) => {
                             {total === 0 ? (
                                 <View style={{ alignItems: "center" }}>
                                     <Text style={styles.noGoals}>No goals for this subject </Text>
-                                    {/* <TouchableOpacity onPress={() => navigation.navigate("MainApp")} style={styles.button}>
-                                    <Text style={styles.buttonText}>Add your first goal</Text>
-                                </TouchableOpacity> */}
+                                    <TouchableOpacity onPress={() => navigation.navigate("MainApp")} style={styles.button}>
+                                        <Text style={styles.buttonText}>Add your first goal</Text>
+                                    </TouchableOpacity>
                                 </View>
                             ) : (
                                 <Svg height="200" width="200" viewBox="0 0 200 200">
@@ -149,10 +164,7 @@ const styles = StyleSheet.create({
     noSubjects: {
         color: "#666",
         fontSize: 16,
-    },
-    link: {
-        color: "#4096FF",
-        textDecorationLine: "underline",
+        justifyContent: 'center'
     },
     label: {
         fontSize: 16,
@@ -207,6 +219,24 @@ const styles = StyleSheet.create({
     buttonText: {
         color: "#fff",
         fontWeight: "600",
+    },
+    addButton: {
+        backgroundColor: '#4a90e2',
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        borderRadius: 5,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 15,
+        width: 'auto',
+        height: 40,
+        alignSelf: 'flex-start',
+        marginVertical: 4
+    },
+    addButtonText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: 'bold',
     },
 });
 
